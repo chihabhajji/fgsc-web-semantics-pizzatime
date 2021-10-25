@@ -1,15 +1,19 @@
 package tn.esprit.fgsc.ws_pizza_ontology.test;
 
 import lombok.extern.slf4j.Slf4j;
+import org.apache.jena.ontology.Individual;
+import org.apache.jena.ontology.OntClass;
 import org.springframework.web.bind.annotation.*;
 import tn.esprit.fgsc.ws_pizza_ontology.test.utils.OwlReaderUtil;
 
 import java.util.*;
 
 @Slf4j
+@CrossOrigin("*")
 @RestController
 public class Subclasses {
-    // http://localhost:8080/subclasses?type=Salty_Topping
+    // Return the types of pizza or whatever class
+    // http://localhost:8080/subclasses?type=Salty_Topping, http://localhost:8080/subclasses?type=Pizza
     @GetMapping("/subclasses")
     protected Map<String, Object> getSubclasses(@RequestParam String type) {
         Map<String, Object> response = new HashMap<>();
@@ -17,38 +21,30 @@ public class Subclasses {
         return response;
     }
     private List<String> getTypeSubclasses(String type) {
-        String queryString =
-                OwlReaderUtil.QUERY_PREFIX
-                        + " "
-                        + "SELECT DISTINCT ?x "
-                        + "WHERE "
-                        + "{ "
-                        + "?x		rdfs:subClassOf 	pizza:%s"
-                        + " }";
-        // String.format(queryString, type)
+        String queryString = OwlReaderUtil.QUERY_PREFIX + "SELECT DISTINCT ?x WHERE { "
+        + "?x		rdfs:subClassOf 	pizza:%s }";
         return OwlReaderUtil.executeQueryOneColumn(String.format(queryString, type));
     }
-    // http://localhost:8080/subclasses?superClass=Pizza
+    // http://localhost:8080/namedindividuals?class=Pizza
     //
-//    @GetMapping("/xyz")
-//    public List<Map<String, String>> getIndividus(@RequestParam String superClass) {
-//        List<Map<String, String>> response= new ArrayList<>();
-//        Iterator<OntClass> individus = Objects.requireNonNull(OwlReaderUtil.readModel()).();
-//        while (individus.hasNext()) {
-//            OntClass sub = individus.next();
-//            OntClass sc = sub.getModel().;
-//            if(sc != null){
-//                if(sc.getLocalName().endsWith(superClass)){
-//                    Map<String , String> obj = new HashMap<>();
-//                    obj.put("name",sub.getLocalName());
-//                    obj.put("uri",sub.getURI());
-//                    response.add(obj);
-//                }
-//            }
-//
-//        }
-//        return response;
-//    }
+    @GetMapping("/namedindividuals")
+    public List<Map<String, String>> getIndividus(@RequestParam(name = "class") String className) {
+        List<Map<String, String>> response= new ArrayList<>();
+        Iterator<Individual> individus = Objects.requireNonNull(OwlReaderUtil.readModel()).listIndividuals();
+        while (individus.hasNext()) {
+            Individual sub = individus.next();
+            OntClass sc = sub.getOntClass();
+            if(sc != null){
+                if(sc.getLocalName().endsWith(className)){
+                    Map<String , String> obj = new HashMap<>();
+                    obj.put("value",sub.getLocalName());
+                    obj.put("uri",sub.getURI());
+                    response.add(obj);
+                }
+            }
+        }
+        return response;
+    }
 
 
 }

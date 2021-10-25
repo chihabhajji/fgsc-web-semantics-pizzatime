@@ -6,6 +6,7 @@ import tn.esprit.fgsc.ws_pizza_ontology.test.utils.OwlReaderUtil;
 import java.util.HashMap;
 import java.util.List;
 
+@CrossOrigin("*")
 @RestController
 @RequestMapping("/SweetDonuts")
 public class QueryAggregatedPizzas {

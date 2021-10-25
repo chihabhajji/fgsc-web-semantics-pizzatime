@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@CrossOrigin("*")
 @RequestMapping("/pizzas/query")
 @RestController
 public class QueryPizzas {
@@ -15,39 +16,23 @@ public class QueryPizzas {
     // http://localhost:8080/pizzas/query
     // you can select more properties by execute2colum
     @PostMapping
-    protected List<String> doGet(@RequestBody QueryDTO query) {
-        String queryString =
-                OwlReaderUtil.QUERY_PREFIX
-                + " "
-                +"SELECT DISTINCT  ?x ?price"
+    public List<String> doGet(@RequestBody QueryDTO query) {
+        String queryString = OwlReaderUtil.QUERY_PREFIX + " "
+                + "SELECT   ?x ?y ?price "
                 + "WHERE "
                 + "{ "
-                + "    ?x     pizza:hasCrust    pizza:%s."
-                + "    ?x     pizza:hasTopping  pizza:%s."
-                + "    ?x     pizza:hasSauce    pizza:%s."
-                + "    ?x     pizza:Calories    ?y."
-                + "    ?x     pizza:Price       ?price."
-                + "    FILTER (?y > %s)"
-                + "    FILTER (?y < %s)"
-                + "    FILTER (?price > %s)  "
-                + "    FILTER (?price < %s) "
-//                + "    FILTER (regex(?x, \"^\"))" TODO : I THINK ITS DONE WITH rdfs: something
-                + "}"
-                + "    LIMIT  %s " +
-                "      OFFSET %s";
-        queryString = String.format(
-                queryString,
-                query.getCrust(),
-                query.getTopping(),
-                query.getSauce(),
-                query.getMinCalories(),
-                query.getMaxCalories(),
-                query.getMinPrice(),
-                query.getMaxPrice(),
-                query.getLimit(),
-                query.getOffset()
-        );
-        return OwlReaderUtil.executeQueryOneColumn(queryString);
+                + (query.getType()    != null && !query.getType().isEmpty()    ? "?x rdf:type 	      pizza:" + query.getType()    + " . " : "")
+                + (query.getCrust()   != null && !query.getCrust().isEmpty()   ? "?x pizza:hasCrust   pizza:" + query.getCrust()   + " . " : "")
+                + (query.getTopping() != null && !query.getTopping().isEmpty() ? "?x pizza:hasTopping pizza:" + query.getTopping() + " . " : "")
+                + (query.getSauce()   != null && !query.getSauce().isEmpty()   ? "?x pizza:hasSauce   pizza:" + query.getSauce()   + " . " : "")
+                + " ?x     pizza:Calories     ?y     . "
+                + " ?x     pizza:Price        ?price . "
+                + (query.getMinCalories() != 0 && query.getMaxCalories() != 0 ?" FILTER (?y     > "+query.getMinCalories()+") FILTER ( ?y     < "+query.getMaxCalories()+" ) ": "")
+                + (query.getMinPrice()    != 0 && query.getMaxPrice()    != 0 ?" FILTER (?price > "+query.getMinPrice()   +") FILTER ( ?price < "+query.getMaxPrice()   +" ) ": "")
+                + "} "
+                + (query.getLimit() != 0 ? " LIMIT "+query.getLimit() : "")
+                + "OFFSET %s ";
+        return OwlReaderUtil.executeQueryOneColumn(String.format(queryString,query.getOffset()));
     }
 //{
 //    "crust":"Cheesy_Edge",

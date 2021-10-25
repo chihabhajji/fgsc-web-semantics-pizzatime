@@ -2,59 +2,24 @@ package tn.esprit.fgsc.ws_pizza_ontology.test;
 
 import org.apache.jena.ontology.OntClass;
 import org.apache.jena.ontology.OntProperty;
-import org.apache.jena.rdf.model.*;
-import org.apache.jena.util.FileManager;
-import org.apache.jena.vocabulary.RDFS;
 import org.springframework.web.bind.annotation.*;
 import tn.esprit.fgsc.ws_pizza_ontology.test.utils.OwlReaderUtil;
 
 import java.util.*;
 
-
+@CrossOrigin("*")
 @RestController
 @RequestMapping("/generic")
 public class GetOwlData {
-    // WORKS
-    // http://localhost:8080/generic?key=hasCrust&value=hasTopping
-    @GetMapping
-    public HashMap<String, Object> getCrustAndTopping(@RequestParam String key, @RequestParam String value) {
-        HashMap<String, Object> response = new HashMap<>();
-        response.put(key, getCrust(key));
-        response.put(value, getTopping(value));
-        return  response;
-    }
-
-    private List<String> getCrust(String key) {
-        String queryString =
-                OwlReaderUtil.QUERY_PREFIX
-                + " "
-                + "SELECT DISTINCT  ?x "
-                + "WHERE "
-                + "{"
-                + "    ?d     pizza:%s    ?x"
-                + "}";
-
-        return OwlReaderUtil.executeQueryOneColumn(String.format(queryString,key));
-    }
-    
-    private List<String> getTopping(String key) {        
-
-        String queryString =
-                OwlReaderUtil.QUERY_PREFIX
-                + " "
-                + "SELECT DISTINCT  ?x "
-                + "WHERE "
-                + "{"
-                + "    ?d     pizza:%s    ?x"
-                + "}";
-
-        return OwlReaderUtil.executeQueryOneColumn(String.format(queryString,key));
-    }
-
+    private static final String queryString = OwlReaderUtil.QUERY_PREFIX +
+    "SELECT DISTINCT  ?x WHERE { ?d     pizza:%s    ?x }";
+    private static final String OBJECT_PROPERTY = "ObjectProperty";
+    private static final String DATA_TYPE_PROPERTY = "DatatypeProperty";
+    // CLASSNAME = Pizza
     @GetMapping(value = "/properties")
-    public List<Map<String,String>> getClassProperties(@RequestParam String className) {
+        public List<Map<String,String>> getClassProperties(@RequestParam String className) {
         ArrayList<Map<String, String>> list= new ArrayList();
-        OntClass ontClass = OwlReaderUtil.readModel().getOntClass("http://www.semanticweb.org/firas/ontologies/2021/9/pizza-ontology#".concat(className) );
+        OntClass ontClass = Objects.requireNonNull(OwlReaderUtil.readModel()).getOntClass(OwlReaderUtil.ONTOLOGY_URI.concat(className) );
         Iterator<OntProperty> subIter = ontClass.listDeclaredProperties();
         while (subIter.hasNext()) {
             OntProperty property = subIter.next();
@@ -66,5 +31,16 @@ public class GetOwlData {
             list.add(obj);
         }
         return list;
+    }
+    // WORKS
+    // http://localhost:8080/generic?key=hasCrust&type=ObjectProperty
+    @GetMapping
+    public HashMap<String, Object> getCrustAndTopping(@RequestParam String key, @RequestParam(defaultValue = DATA_TYPE_PROPERTY) String type) {
+        HashMap<String, Object> response = new HashMap<>();
+        if(Objects.equals(type, OBJECT_PROPERTY))
+            response.put(key, OwlReaderUtil.executeQueryOneColumn(String.format(queryString,key)));
+        else
+            response.put(key, OwlReaderUtil.executeQueryOneColumnLiteral(String.format(queryString,key)));
+        return  response;
     }
 }

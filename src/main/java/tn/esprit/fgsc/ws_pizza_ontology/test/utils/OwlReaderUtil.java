@@ -18,6 +18,8 @@ import java.util.logging.Logger;
 public class OwlReaderUtil {
     public static final Logger logger = Logger.getLogger(OwlReaderUtil.class.getName());
     public static final String OWL_FILE = "data/pizza.owl";
+    public static final String ONTOLOGY_URI = "http://www.semanticweb.org/firas/ontologies/2021/9/pizza-ontology#";
+
     public static List<String> executeQueryOneColumn(String queryString) {
         List<String> values = new ArrayList<>();
         Model model = FileManager.getInternal().loadModelInternal( OWL_FILE );
@@ -25,7 +27,6 @@ public class OwlReaderUtil {
         try (QueryExecution qexec = QueryExecutionFactory.create(query, model)) {
             ResultSet results = qexec.execSelect();
             while (results.hasNext()) {
-                System.out.println("OK");
                 QuerySolution solution = results.nextSolution();
                 Resource x = solution.getResource("x");
                 values.add(x.getLocalName());
@@ -33,6 +34,22 @@ public class OwlReaderUtil {
         }
         return values;
     }
+
+    public static List<?> executeQueryOneColumnLiteral(String queryString) {
+        List<String> values = new ArrayList<>();
+        Model model = FileManager.getInternal().loadModelInternal( OWL_FILE );
+        Query query = QueryFactory.create(queryString);
+        try (QueryExecution qexec = QueryExecutionFactory.create(query, model)) {
+            ResultSet results = qexec.execSelect();
+            while (results.hasNext()) {
+                QuerySolution solution = results.nextSolution();
+                Literal x = solution.getLiteral("x");
+                values.add(x.getDatatype().getJavaClass().getName());
+            }
+        }
+        return values;
+    }
+
 //    public static void test(Object... values){
 //        int i = 0;
 //        for(Object ob : values){
@@ -42,7 +59,6 @@ public class OwlReaderUtil {
     public static List<String> executeQueryTwoColumn(String queryString) {
         ArrayList rows = new ArrayList();
         Model model = FileManager.getInternal().loadModelInternal(OWL_FILE);
-
         Query query = QueryFactory.create(queryString);
         try (QueryExecution qexec = QueryExecutionFactory.create(query, model)) {
             ResultSet results = qexec.execSelect();
