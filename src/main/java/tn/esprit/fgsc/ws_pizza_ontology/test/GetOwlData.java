@@ -35,12 +35,10 @@ public class GetOwlData {
     // WORKS
     // http://localhost:8080/generic?key=hasCrust&type=ObjectProperty
     @GetMapping
-    public HashMap<String, Object> getCrustAndTopping(@RequestParam String key, @RequestParam(defaultValue = DATA_TYPE_PROPERTY) String type) {
-        HashMap<String, Object> response = new HashMap<>();
+    public List<String> getCrustAndTopping(@RequestParam String key, @RequestParam(defaultValue = DATA_TYPE_PROPERTY) String type) {
         if(Objects.equals(type, OBJECT_PROPERTY))
-            response.put(key, OwlReaderUtil.executeQueryOneColumn(String.format(queryString,key)));
+            return OwlReaderUtil.executeQueryOneColumn(String.format(queryString,key));
         else
-            response.put(key, OwlReaderUtil.executeQueryOneColumnLiteral(String.format(queryString,key)));
-        return  response;
+            return OwlReaderUtil.executeQueryOneColumnLiteral(String.format(queryString,key));
     }
 }

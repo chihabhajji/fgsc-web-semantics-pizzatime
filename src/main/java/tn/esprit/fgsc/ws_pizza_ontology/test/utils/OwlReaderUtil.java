@@ -35,7 +35,7 @@ public class OwlReaderUtil {
         return values;
     }
 
-    public static List<?> executeQueryOneColumnLiteral(String queryString) {
+    public static List<String> executeQueryOneColumnLiteral(String queryString) {
         List<String> values = new ArrayList<>();
         Model model = FileManager.getInternal().loadModelInternal( OWL_FILE );
         Query query = QueryFactory.create(queryString);
